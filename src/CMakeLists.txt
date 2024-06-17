@@ -1,15 +1,15 @@
 kernel_source       (
     popcorn-linux-fs
-    chr/chr_type.h
-    chr/chr_type.c
+        char.h
+        char.c
 
-    chr/chr.h
-    chr/chr.c
+        cdev.h
+        cdev.c
 
-    chr.h
+    char.h
 
-    control.h
-    control.c
+    ioctl.h
+    ioctl.c
 
     write.h
     write.c
@@ -17,9 +17,11 @@ kernel_source       (
     read.h
     read.c
 
-    file_type.h
-    file_type.c
-
     file.h
     file.c
+
+    use.h
+    use.c
 )
+
+target_include_directories(popcorn-linux-fs PRIVATE ../../linux-core/include)
