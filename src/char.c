@@ -1,7 +1,7 @@
-#include "chr_type.h"
-#include "chr.h"
+#include "char.h"
+#include "cdev.h"
 
-#include "../file_type.h"
+#include "file.h"
 
 #include <linux/poll.h>
 

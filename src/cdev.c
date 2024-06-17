@@ -1,8 +1,8 @@
-#include "chr.h"
-#include "chr_type.h"
+#include "cdev.h"
+#include "char.h"
 
-#include "../file_type.h"
-#include "../file.h"
+#include "file.h"
+#include "use.h"
 
 #include "../../../lib/popcorn/linux/src/dev/class.h"
 
