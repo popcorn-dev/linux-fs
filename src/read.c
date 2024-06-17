@@ -1,133 +1,121 @@
 #include "read.h"
-#include "file.h"
+#include "use.h"
 
-po_obj_trait po_read_trait = po_make_trait (
-    po_read_new    ,
-    po_read_clone  ,
+po_obj_trait fs_read_trait = po_make_trait (
+    fs_read_new    ,
+    fs_read_clone  ,
     null_t         ,
-    po_read_del    ,
-    sizeof(po_read),
+    fs_read_del    ,
+    sizeof(fs_read),
     null_t
 );
 
-po_obj_trait* po_read_t = &po_read_trait;
+po_obj_trait* fs_read_t = &fs_read_trait;
 
 bool_t
-    po_read_new
-        (po_read* par_read, u32_t par_count, va_list par)                          {
-            po_file *file = null_t; if (par_count > 0) file = va_arg(par, po_file*);
-            u8_t    *read = null_t; if (par_count > 1) read = va_arg(par, u8_t*)   ;
-            u64_t    len  = 0     ; if (par_count > 2) len  = va_arg(par, u64_t)   ;
-            if (po_trait_of(file) != po_file_t) return false_t;
-            if (!read)                          return false_t;
-            if (!len)                           return false_t;
-            par_read->stat = po_fut_pend;
-            par_read->file = file;
-            par_read->buf  = read;
-            par_read->len  = len ;
-            par_read->off  = 0   ;
+    fs_read_new
+        (fs_read* self, u32_t count, va_list arg)                        {
+            fs_use *use = null_t; if (count > 0) use = va_arg(arg, any_t);
+            u8_t   *buf = null_t; if (count > 1) buf = va_arg(arg, any_t);
+            u64_t   len = 0     ; if (count > 2) len = va_arg(arg, u64_t);
+
+            if (!po_make_at(&self->buf, po_ua) from (2, buf, len)) return false_t;
+            if (po_trait_of(use) != fs_use_t) goto err;
+            if (!buf)                         goto err;
+            if (!len)                         goto err;
+            self->stat = po_fut_pend;
+
+            self->use = (fs_use*) po_ref(use);
+            self->ret = 0;
             return true_t;
+    err:    po_del (&self->buf);
+            return false_t;
 }
 
 bool_t
-    po_read_clone
-        (po_read* par, po_read* par_clone) {
+    fs_read_clone
+        (fs_read* self, fs_read* clone) {
             return false_t;
 }
 
 void
-    po_read_del
-        (po_read* par) {
+    fs_read_del
+        (fs_read* self)       {
+            po_del(&self->buf);
+            po_del (self->use);
+}
+
+
+void
+    fs_read_err
+        (fs_read* self, u64_t err)                    {
+            if (po_trait_of(self) != fs_read_t) return;
+            if (self->stat != po_fut_pend)      return;
+            self->stat = po_fut_err;
+            self->ret  = err;
+
 }
 
 void
-    po_read_from
-        (po_read* par, u8_t* par_buf, u64_t par_len)       {
-            if (po_trait_of(par)       != po_read_t) return;
-            if (po_trait_of(par->file) != po_file_t) return;
-            if (par->stat != po_fut_pend) return;
-            if (!par_buf)                 return;
-            if (!par_len)                 return;
-            u64_t off = par->off      ;
-            u64_t len = par->len - off;
-            u8_t* buf = par->buf + off;
+    fs_read_ready
+        (fs_read* self, u64_t len)                    {
+            if (po_trait_of(self) != fs_read_t) return;
+            if (self->stat != po_fut_pend)      return;
+            self->ret  = len;
 
-            if (par_len > len) par_len = len;
-            u64_t ret = copy_to_user        (
-                buf    ,
-                par_buf,
-                len
-            );
-
-            par->off += (len - ret);
-}
-
-void
-    po_read_err
-        (po_read* par, u64_t par_err)                      {
-            if (po_trait_of(par)       != po_read_t) return;
-            if (po_trait_of(par->file) != po_file_t) return;
-            if (par->stat != po_fut_pend)            return;
-            par->off  = par_err   ;
-            par->stat = po_fut_err;
-}
-
-void
-    po_read_ready
-        (po_read* par)                                     {
-            if (po_trait_of(par)       != po_read_t) return;
-            if (po_trait_of(par->file) != po_file_t) return;
-            if (par->stat != po_fut_pend)            return;
-            par->stat = po_fut_ready;
+            self->stat = po_fut_ready;
 }
 
 u64_t
-    po_read_len
-        (po_read* par)                                       {
-            if (po_trait_of(par)       != po_read_t) return 0;
-            if (po_trait_of(par->file) != po_file_t) return 0;
-            return par->len;
+    fs_read_len
+        (fs_read* self)                                 {
+            if (po_trait_of(self) != fs_read_t) return 0;
+            return po_ua_len(&self->buf);
 }
 
-u64_t
-    po_read_do_poll
-        (po_read* par)                                                {
-            if (po_trait_of(par)       != po_read_t) return po_fut_err;
-            if (po_trait_of(par->file) != po_file_t) return po_fut_err;
+po_ua*
+    fs_read_buf
+        (fs_read* self)                                 {
+            if (po_trait_of(self) != fs_read_t) return 0;
+            return &self->buf;
+}
+
+static u64_t
+    do_poll
+        (fs_read* par)                                          {
+            if (po_trait_of(par) != fs_read_t) return po_fut_err;
             return par->stat;
 }
 
-u64_t
-    po_read_do_ret
-        (po_read* par)                                                {
-            if (po_trait_of(par)       != po_read_t) return po_fut_err;
-            if (po_trait_of(par->file) != po_file_t) return po_fut_err;
-            return par->off;
+static u64_t
+    do_ret
+        (fs_read* par)                                          {
+            if (po_trait_of(par) != fs_read_t) return po_fut_err;
+            return par->ret;
 }
 
-po_fut_ops po_read_fut_ops = po_make_fut_ops (
-    po_read_do_poll,
-    po_read_do_ret
+static po_fut_ops
+    do_fut = po_make_fut_ops (
+    do_poll,
+    do_ret
 );
 
 po_fut*
-    po_read_fut
-        (po_read* par)                                            {
-            if (po_trait_of(par)       != po_read_t) return null_t;
-            if (po_trait_of(par->file) != po_file_t) return null_t;
-            return po_make (po_fut) from                          (
-                2               ,
-                &po_read_fut_ops,
-                par
+    fs_read_fut
+        (fs_read* self)                                      {
+            if (po_trait_of(self) != fs_read_t) return null_t;
+            return po_make (po_fut) from      (
+                2      ,
+                &do_fut,
+                self
             );
 }
 
 #include <linux/module.h>
 
 MODULE_LICENSE("GPL");
-EXPORT_SYMBOL(po_read_from);
-EXPORT_SYMBOL(po_read_err);
-EXPORT_SYMBOL(po_read_ready);
-EXPORT_SYMBOL(po_read_len);
-EXPORT_SYMBOL(po_read_fut);
-EXPORT_SYMBOL(po_read_t);
+EXPORT_SYMBOL(fs_read_err);
+EXPORT_SYMBOL(fs_read_ready);
+EXPORT_SYMBOL(fs_read_len);
+EXPORT_SYMBOL(fs_read_fut);
+EXPORT_SYMBOL(fs_read_t);

@@ -4,29 +4,27 @@
 #include <core.h>
 #include <collections.h>
 
-#include <linux/uaccess.h>
+#include <core/ua.h>
 
-struct po_file;
-extern po_obj_trait *po_read_t;
-typedef struct       po_read  {
-    po_obj          head;
-    struct po_file *file;
-    u64_t           stat;
-    __user u8_t    *buf;
-    u64_t           len;
-    u64_t           off;
-}   po_read;
+struct fs_use;
+extern po_obj_trait *fs_read_t;
+typedef struct       fs_read  {
+    po_obj         head;
+    u64_t          stat;
+    struct fs_use *use;
+    po_ua          buf;
+    u64_t          ret;
+}   fs_read;
 
-bool_t  po_read_new         (po_read*, u32_t, va_list);
-bool_t  po_read_clone       (po_read*, po_read*)      ;
-void    po_read_del         (po_read*)                ;
+bool_t  fs_read_new  (fs_read*, u32_t, va_list);
+bool_t  fs_read_clone(fs_read*, fs_read*)      ;
+void    fs_read_del  (fs_read*)                ;
 
-void    po_read_from        (po_read*, u8_t*, u64_t);
-void    po_read_ready       (po_read*)              ;
-void    po_read_err         (po_read*, u64_t)       ;
+void    fs_read_ready(fs_read*, u64_t);
+void    fs_read_err  (fs_read*, u64_t);
 
-u8_t*   po_read_buf         (po_read*)              ;
-u64_t   po_read_len         (po_read*)              ;
-po_fut* po_read_fut         (po_read*)              ;
+po_fut* fs_read_fut  (fs_read*);
+u64_t   fs_read_len  (fs_read*);
+po_ua*  fs_read_buf  (fs_read*);
 
 #endif
