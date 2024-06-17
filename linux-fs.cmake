@@ -1,3 +1,3 @@
-repo(linux-core popcorn-dev v0 ${ROOT}/lib)
+repo(linux-core popcorn-dev v0)
 
-include_directories(${ROOT}/lib/linux-core/include)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
