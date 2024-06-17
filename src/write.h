@@ -3,30 +3,29 @@
 
 #include <core.h>
 #include <collections.h>
-#include <linux/uaccess.h>
 
-struct po_chr_dev;
+#include <core/ua.h>
 
-extern po_obj_trait *po_write_t;
-typedef struct       po_write  {
-    po_obj          head;
-    struct po_file *file;
-    u64_t           stat;
-    __user u8_t    *buf ;
-    u64_t           len ;
-    u64_t           off ;
-}   po_write;
+struct fs_use;
 
-bool_t      po_write_new       (po_write*, u32_t, va_list);
-bool_t      po_write_clone     (po_write*, po_write*)     ;
-void        po_write_del       (po_write*)                ;
+extern po_obj_trait *fs_write_t;
+typedef struct       fs_write  {
+    po_obj         head;
+    u64_t          stat;
+    struct fs_use *use;
+    po_ua          buf;
+    u64_t          ret;
+}   fs_write;
 
-void        po_write_to        (po_write*, u8_t*, u64_t)  ;
-void        po_write_ready     (po_write*)                ;
-void        po_write_err       (po_write*, u64_t)         ;
+bool_t  fs_write_new  (fs_write*, u32_t, va_list);
+bool_t  fs_write_clone(fs_write*, fs_write*)     ;
+void    fs_write_del  (fs_write*)                ;
 
-u8_t*       po_write_buf       (po_write*)                ;
-u64_t       po_write_len       (po_write*)                ;
-po_fut*     po_write_fut       (po_write*)                ;
+bool_t  fs_write_ready(fs_write*, u64_t);
+bool_t  fs_write_err  (fs_write*, u64_t);
+
+po_ua*  fs_write_buf  (fs_write*);
+u64_t   fs_write_len  (fs_write*);
+po_fut* fs_write_fut  (fs_write*);
 
 #endif

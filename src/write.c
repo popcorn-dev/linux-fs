@@ -1,140 +1,123 @@
 #include "write.h"
-#include "file.h"
+#include "use.h"
 
-po_obj_trait po_write_trait = po_make_trait (
-    po_write_new    ,
-    po_write_clone  ,
+po_obj_trait fs_write_trait = po_make_trait (
+    fs_write_new    ,
+    fs_write_clone  ,
     null_t          ,
-    po_write_del    ,
-    sizeof(po_write),
+    fs_write_del    ,
+    sizeof(fs_write),
     null_t
 );
 
-po_obj_trait *po_write_t = &po_write_trait;
+po_obj_trait *fs_write_t = &fs_write_trait;
 
 bool_t
-    po_write_new
-        (po_write* par_write, u32_t par_count, va_list par)                          {
-            po_file *file  = null_t; if (par_count > 0) file  = va_arg(par, po_file*);
-            u8_t    *write = null_t; if (par_count > 0) write = va_arg(par, u8_t*)   ;
-            u64_t    len   = 0     ; if (par_count > 1) len   = va_arg(par, u64_t)   ;
-            if (po_trait_of(file) != po_file_t) return false_t;
-            if (!write)                         return false_t;
-            if (!len)                           return false_t;
-            par_write->stat = po_fut_pend;
-            par_write->file = file ;
-            par_write->buf  = write;
-            par_write->len  = len  ;
-            par_write->off  = 0    ;
+    fs_write_new
+        (fs_write* self, u32_t count, va_list arg)                       {
+            fs_use *use = null_t; if (count > 0) use = va_arg(arg, any_t);
+            u8_t   *buf = null_t; if (count > 1) buf = va_arg(arg, any_t);
+            u64_t   len = 0     ; if (count > 2) len = va_arg(arg, u64_t);
+
+            if (!po_make_at(&self->buf, po_ua) from (2, buf, len)) return false_t;
+            if (po_trait_of(use) != fs_use_t) goto err;
+            if (!buf)                         goto err;
+            if (!len)                         goto err;
+            self->stat = po_fut_pend;
+
+            self->use = (fs_use*) po_ref (use);
+            self->ret  = 0;
             return true_t;
+    err:    po_del (&self->buf);
+            return false_t;
 }
 
 bool_t
-    po_write_clone
-        (po_write* par, po_write* par_clone) {
+    fs_write_clone
+        (fs_write* self, fs_write* clone) {
             return false_t;
 }
 
 void
-    po_write_del
-        (po_write* par) {
+    fs_write_del
+        (fs_write* self)      {
+            po_del(&self->buf);
+            po_del (self->use);
 }
 
-u8_t*
-    po_write_buf
-        (po_write* par)                                            {
-            if (po_trait_of(par)       != po_write_t) return null_t;
-            if (po_trait_of(par->file) != po_file_t)  return null_t;
-            return par->buf;
+po_ua*
+    fs_write_buf
+        (fs_write* self)                                       {
+            if (po_trait_of(self) != fs_write_t) return null_t;
+            return &self->buf;
 }
 
-void
-    po_write_ready
-        (po_write* par)                                     {
-            if (po_trait_of(par)       != po_write_t) return;
-            if (po_trait_of(par->file) != po_file_t)  return;
-            if (par->stat != po_fut_pend)             return;
-            par->stat = po_fut_ready;
+bool_t
+    fs_write_ready
+        (fs_write* self, u64_t len)                            {
+            if (po_trait_of(self) != fs_write_t) return false_t;
+            if (self->stat != po_fut_pend)       return false_t;
+            self->ret = len;
+
+            self->stat = po_fut_ready;
+            return true_t;
 }
 
-void
-    po_write_err
-        (po_write* par, u64_t par_err)                      {
-            if (po_trait_of(par)       != po_write_t) return;
-            if (po_trait_of(par->file) != po_file_t)  return;
-            par->off  = par_err   ;
-            par->stat = po_fut_err;
-}
+bool_t
+    fs_write_err
+        (fs_write* self, u64_t err)                            {
+            if (po_trait_of(self) != fs_write_t) return false_t;
+            if (self->stat != po_fut_pend)       return false_t;
+            self->ret = err;
 
-u64_t
-    po_write_len
-        (po_write* par)                                       {
-            if (po_trait_of(par)       != po_write_t) return 0;
-            if (po_trait_of(par->file) != po_file_t)  return 0;
-            return par->len;
-}
-
-void
-    po_write_to
-        (po_write* par, u8_t* par_buf, u64_t par_len)       {
-            if (po_trait_of(par)       != po_write_t) return;
-            if (po_trait_of(par->file) != po_file_t)  return;
-            if (par->stat != po_fut_pend) return;
-            if (!par_buf)                 return;
-            if (!par_len)                 return;
-            u64_t off = par->off      ;
-            u64_t len = par->len - off;
-            u8_t* buf = par->buf + off;
-
-            if (par_len > len) par_len = len;
-            u64_t ret = copy_from_user      (
-                par_buf,
-                buf    ,
-                len
-            );
-
-            par->off += (len - ret);
+            self->stat = po_fut_err;
+            return true_t;
 }
 
 u64_t
-    po_write_do_poll
-        (po_write* par)                                                {
-            if (po_trait_of(par)       != po_write_t) return po_fut_err;
-            if (po_trait_of(par->file) != po_file_t)  return po_fut_err;
-            return par->stat;
+    fs_write_len
+        (fs_write* self)                                 {
+            if (po_trait_of(self) != fs_write_t) return 0;
+            return po_ua_len(&self->buf);
 }
 
-u64_t
-    po_write_do_ret
-        (po_write* par)                                                {
-            if (po_trait_of(par)       != po_write_t) return po_fut_err;
-            if (po_trait_of(par->file) != po_file_t)  return po_fut_err;
-            return par->off;
+static u64_t
+    do_poll
+        (fs_write* self)                                          {
+            if (po_trait_of(self) != fs_write_t) return po_fut_err;
+            return self->stat;
 }
 
-po_fut_ops po_write_fut_ops = po_make_fut_ops (
-        po_write_do_poll,
-        po_write_do_ret
+static u64_t
+    do_ret
+        (fs_write* self)                                          {
+            if (po_trait_of(self) != fs_write_t) return po_fut_err;
+            return self->ret;
+}
+
+static po_fut_ops
+    do_fut = po_make_fut_ops (
+    do_poll,
+    do_ret
 );
 
 po_fut*
-    po_write_fut
-        (po_write* par)                                            {
-            if (po_trait_of(par)       != po_write_t) return null_t;
-            if (po_trait_of(par->file) != po_file_t)  return null_t;
-            return po_make (po_fut) from                           (
-                2                ,
-                &po_write_fut_ops,
-                par
+    fs_write_fut
+        (fs_write* self)                                       {
+            if (po_trait_of(self) != fs_write_t) return null_t;
+            return po_make (po_fut) from       (
+                2      ,
+                &do_fut,
+                self
             );
 }
 
 #include <linux/module.h>
 MODULE_LICENSE("GPL");
-EXPORT_SYMBOL(po_write_to);
-EXPORT_SYMBOL(po_write_len);
-EXPORT_SYMBOL(po_write_ready);
-EXPORT_SYMBOL(po_write_err);
-EXPORT_SYMBOL(po_write_buf);
-EXPORT_SYMBOL(po_write_fut);
-EXPORT_SYMBOL(po_write_t);
+EXPORT_SYMBOL(fs_write_to);
+EXPORT_SYMBOL(fs_write_len);
+EXPORT_SYMBOL(fs_write_ready);
+EXPORT_SYMBOL(fs_write_err);
+EXPORT_SYMBOL(fs_write_buf);
+EXPORT_SYMBOL(fs_write_fut);
+EXPORT_SYMBOL(fs_write_t);
