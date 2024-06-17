@@ -1,10 +1,10 @@
-kernel_source       (
+add_kernel_source   (
     popcorn-linux-fs
-        char.h
-        char.c
+    char.h
+    char.c
 
-        cdev.h
-        cdev.c
+    cdev.h
+    cdev.c
 
     char.h
 
