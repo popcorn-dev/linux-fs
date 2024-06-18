@@ -17,7 +17,7 @@ typedef struct fs_fdo                     {
 }   fs_fdo;
 
 #define fs_make_fdo(do_ctl, do_out, do_in, do_poll)        {\
-    .poll = ((void (*)(po_obj*, struct fs_poll*))(do_poll)) \
+    .poll = ((void (*)(po_obj*, struct fs_poll*))(do_poll)),\
     .ctl  = ((void (*)(po_obj*, struct fs_ctl*)) (do_ctl)) ,\
     .out  = ((void (*)(po_obj*, struct fs_out*)) (do_out)) ,\
     .in   = ((void (*)(po_obj*, struct fs_in*))  (do_in))  ,\
