@@ -106,7 +106,7 @@ static ssize_t
             );
 
             if (po_trait_of(wait) != po_wait_t) goto err;
-            if (po_trait_of(out)  != fs_in_t)   goto err;
+            if (po_trait_of(out)  != fs_out_t)  goto err;
             ops->fdo->out (use->use, out);
 
             po_wait_on(wait, true_t);
