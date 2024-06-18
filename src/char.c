@@ -1,49 +1,61 @@
-#include "char.h"
-#include "cdev.h"
+#include "fs.h"
 
-#include "file.h"
-
-#include <linux/poll.h>
-
-po_obj_trait po_chr_type_trait = po_make_trait (
-    po_chr_type_new    ,
-    po_chr_type_clone  ,
-    null_t             ,
-    po_chr_type_del    ,
-    sizeof(po_chr_type),
+po_obj_trait fs_char_trait = po_make_trait (
+    fs_char_new    ,
+    fs_char_clone  ,
+    null_t         ,
+    fs_char_del    ,
+    sizeof(fs_char),
     null_t
 );
 
-po_obj_trait *po_chr_type_t = &po_chr_type_trait;
+po_obj_trait *fs_char_t = &fs_char_trait;
 
 bool_t
-    po_chr_type_new
-        (po_chr_type* par_chr, u32_t par_count, va_list par)                         {
-            po_str *name = null_t    ; if (par_count > 0) name = va_arg(par, po_str*);
-            u64_t   maj  = 0         ; if (par_count > 1) maj  = va_arg(par, u64_t)  ;
-            u64_t   num  = shl(1, 19); if (par_count > 2) num  = va_arg(par, u64_t)  ;
-            if (po_trait_of (name) != po_str_t) return false_t;
-            if (maj >= shl(1, 12))              return false_t;
-            if (num >= shl(1, 20))              return false_t;
-            ida_init(&par_chr->ida);
+    fs_char_new
+        (fs_char* self, u32_t count, va_list arg)                                {
+            po_class   *class = null_t; if (count > 3) class = va_arg(arg, any_t);
+            const char *name  = null_t; if (count > 0) name  = va_arg(arg, any_t);
+            fs_fops    *ops   = null_t; if (count > 1) ops   = va_arg(arg, any_t);
+            fs_dev     *reg   = null_t; if (count > 2) reg   = va_arg(arg, any_t);
+            if (po_trait_of(&fs) != fs_t) return false_t;
 
-            if (alloc_chrdev_region(&par_chr->maj, maj, num, po_str_ptr(name)) < 0) return false_t;
-            par_chr->num  = num;
+            if (po_trait_of(class) != po_class_t) class = &fs.class;
+            if (po_trait_of(reg)   != fs_dev_t)   reg   = &fs.chr;
+            dev_t num = ida_alloc(&reg->ida, GFP_KERNEL);
+            cdev_init(&self->chr, ops->fdo);
+
+            if (cdev_add(&self->chr, reg->maj + num, 1) < 0) return false_t;
+            self->dev = device_create (
+                &class->class ,
+                null_t        ,
+                reg->maj + num,
+                self          ,
+                name
+            );
+
+            self->class = (po_class*) po_ref(class);
+            self->ops   = (fs_fops*)  po_ref(ops);
+            self->reg   = (fs_dev *)  po_ref(reg);
+            self->num   = num;
             return true_t;
 }
 
 bool_t
-    po_chr_type_clone
-        (po_chr_type* par, po_chr_type* par_clone)  {
+    fs_char_clone
+        (fs_char* self, fs_char* clone) {
             return false_t;
 }
 
 void
-    po_chr_type_del
-        (po_chr_type* par)                              {
-            unregister_chrdev_region(par->maj, par->num);
-            ida_destroy             (&par->ida);
+    fs_char_del
+        (fs_char* self)                                                       {
+            device_destroy   (&self->class->class, self->reg->maj + self->num);
+            ida_simple_remove(&self->reg->ida    , self->num)                 ;
+            cdev_del         (&self->chr)                                     ;
+            po_del (self->class);
+            po_del (self->ops);
+            po_del (self->reg);
 }
 
-MODULE_LICENSE("GPL");
-EXPORT_SYMBOL(po_chr_type_t);
+EXPORT_SYMBOL(fs_char_t);

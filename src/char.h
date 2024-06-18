@@ -1,18 +1,26 @@
-#ifndef __PO_FS_CHR_CHR_TYPE_H__
-#define __PO_FS_CHR_CHR_TYPE_H__
+#ifndef PO_LINUX_FS_CHAR_H
+#define PO_LINUX_FS_CHAR_H
 
-#include "core.h"
-#include "collections.h"
+#include <core.h>
+#include <collections.h>
+#include <core/class.h>
+
 #include <linux/cdev.h>
-#include <linux/fs.h>
 
-struct po_file_type;
+struct fs_file;
+struct fs_char;
+
 extern po_obj_trait *fs_char_t;
 typedef struct       fs_char  {
-    po_obj     head;
-    struct ida ida;
-    dev_t      maj;
-    u64_t      num;
+    po_obj          head ;
+    po_class       *class;
+
+    struct fs_dev  *reg;
+    struct device  *dev;
+    struct fs_fops *ops;
+
+    struct cdev     chr;
+    dev_t           num;
 }   fs_char;
 
 bool_t fs_char_new  (fs_char*, u32_t, va_list);
