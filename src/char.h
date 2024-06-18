@@ -4,6 +4,7 @@
 #include <core.h>
 #include <collections.h>
 #include <core/class.h>
+#include <core/dev.h>
 
 #include <linux/cdev.h>
 
@@ -15,9 +16,9 @@ typedef struct       fs_char  {
     po_obj          head ;
     po_class       *class;
 
-    struct fs_dev  *reg;
-    struct device  *dev;
     struct fs_fops *ops;
+    struct fs_dev  *reg;
+    po_dev         *dev;
 
     struct cdev     chr;
     dev_t           num;
