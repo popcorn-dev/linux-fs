@@ -1,27 +1,41 @@
 add_kernel_source   (
     popcorn-linux-fs
+    fs.h
+    fs.c
+
+    dev.h
+    dev.c
+
     char.h
     char.c
 
-    cdev.h
-    cdev.c
+    poll.h
+    poll.c
 
-    char.h
+    ctl.h
+    ctl.c
 
-    ioctl.h
-    ioctl.c
+    out.h
+    out.c
 
-    write.h
-    write.c
+    in.h
+    in.c
 
-    read.h
-    read.c
+    fops.h
+    fops.c
 
     file.h
     file.c
-
-    use.h
-    use.c
 )
 
-target_include_directories(popcorn-linux-fs PRIVATE ../../linux-core/include)
+inc (popcorn-linux-fs-include
+    ../include/fs.h
+    ../include/fs/char.h
+    ../include/fs/ctl.h
+    ../include/fs/dev.h
+    ../include/fs/file.h
+    ../include/fs/fops.h
+    ../include/fs/in.h
+    ../include/fs/out.h
+    ../include/fs/poll.h
+)
