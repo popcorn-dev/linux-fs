@@ -6,7 +6,7 @@
 po_obj_trait fs_ctl_trait = po_make_trait (
     fs_ctl_new    ,
     fs_ctl_clone  ,
-    null_t            ,
+    null_t        ,
     fs_ctl_del    ,
     sizeof(fs_ctl),
     null_t
@@ -17,11 +17,13 @@ po_obj_trait* fs_ctl_t = &fs_ctl_trait;
 bool_t
     fs_ctl_new
         (fs_ctl* self, u32_t count, va_list par)                            {
+            po_wait *wait = null_t; if (count > 3) wait = va_arg(par, any_t);
             fs_file *file = null_t; if (count > 0) file = va_arg(par, any_t);
             u64_t    code = 0     ; if (count > 1) code = va_arg(par, u64_t);
             any_t    arg  = 0     ; if (count > 2) arg  = va_arg(par, any_t);
             if (po_trait_of(file) != fs_file_t) return false_t;
 
+            self->wait = (po_wait*) po_ref(wait);
             self->use  = (fs_file*) po_ref(file);
             self->code = code;
             self->arg  = arg ;
@@ -36,13 +38,22 @@ bool_t
 
 void
     fs_ctl_del
-        (fs_ctl* self)        {
+        (fs_ctl* self)         {
+            po_del (self->wait);
             po_del (self->use);
 }
 
-void  fs_ctl_ready(fs_ctl* self, i64_t ret) { if (po_trait_of(self) != fs_ctl_t) return;        self->ret = ret; }
-any_t fs_ctl_arg  (fs_ctl* self)            { if (po_trait_of(self) != fs_ctl_t) return null_t; return self->arg ; }
-u64_t fs_ctl_code (fs_ctl* self)            { if (po_trait_of(self) != fs_ctl_t) return -1;     return self->code; }
+void
+    fs_ctl_ready
+        (fs_ctl* self, i64_t ret)                    {
+            if (po_trait_of(self) != fs_ctl_t) return;
+            self->ret = ret;
+
+            po_wake(self->wait, true_t);
+}
+
+any_t fs_ctl_arg  (fs_ctl* self) { if (po_trait_of(self) != fs_ctl_t) return null_t; return self->arg ; }
+u64_t fs_ctl_code (fs_ctl* self) { if (po_trait_of(self) != fs_ctl_t) return -1;     return self->code; }
 
 any_t
     fs_ctl_arg_ka

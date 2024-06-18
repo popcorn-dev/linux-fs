@@ -3,11 +3,14 @@
 
 #include <core.h>
 #include <collections.h>
+
+#include <core/wait.h>
 #include <core/ua.h>
 
 extern po_obj_trait *fs_ctl_t;
 typedef struct       fs_ctl  {
     po_obj          head;
+    po_wait        *wait;
     u64_t           code;
     struct fs_file *use;
     any_t           arg;
