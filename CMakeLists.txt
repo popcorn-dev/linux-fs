@@ -1,2 +1,5 @@
 add_subdirectory(src)
-add_subdirectory(example)
+
+if   (PRESET_BUILD_EXAMPLE)
+    add_subdirectory(example)
+endif()
