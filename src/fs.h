@@ -13,9 +13,7 @@
 #include "out.h"
 #include "poll.h"
 
-extern po_obj_trait *fs_t;
-struct               fs  {
-    po_obj   head ;
+struct fs         {
     po_class class;
     fs_dev   chr;
     fs_dev   blk;

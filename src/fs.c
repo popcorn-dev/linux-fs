@@ -1,33 +1,20 @@
 #include "fs.h"
 
-static bool_t
-    do_new
-        (struct fs* self, u32_t count, va_list arg)                                                  {
-            if (!po_make_at(&self->class, po_class) from (1, "popcorn_fs"))            return false_t;
-            if (!po_make_at(&self->chr  , fs_dev)   from (2, "popcorn_fs", fs_char_t)) return false_t;
-            return true_t;
-}
+struct fs fs;
 
-static bool_t
-    do_clone
-        (struct fs* self, struct fs* clone) {
-            return false_t;
+static int
+    mod_init(void)                                                                       {
+        if (!po_make_at(&fs.class, po_class) from (1, "popcorn_fs"))            return -1;
+        if (!po_make_at(&fs.chr  , fs_dev)   from (2, "popcorn_fs", fs_char_t)) return -1;
+        return 0;
 }
 
 static void
-    do_del
-        (struct fs* self)        {
-            po_del (&self->class);
-            po_del (&self->chr)  ;
+    mod_exit(void)        {
+        po_del (&fs.class);
+        po_del (&fs.chr);
 }
 
-po_obj_trait fs_trait = po_make_trait (
-    do_new           ,
-    do_clone         ,
-    null_t           ,
-    do_del           ,
-    sizeof(struct fs),
-    null_t
-);
-
-po_obj_trait *fs_t = &fs_trait;
+MODULE_LICENSE("GPL");
+module_init(mod_init)
+module_exit(mod_exit)
