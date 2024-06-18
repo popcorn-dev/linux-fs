@@ -68,15 +68,16 @@ static ssize_t
 
             if (!(file->f_flags & O_NONBLOCK)) wait = po_make (po_wait) from (0);
             fs_in *in  = po_make (fs_in) from (
-                3  ,
+                4  ,
                 use,
                 buf,
-                len
+                len,
+                wait
             );
 
             if (po_trait_of(wait) != po_wait_t) goto err;
             if (po_trait_of(in)   != fs_in_t)   goto err;
-            ops->fdo->in (use->use, in, wait);
+            ops->fdo->in (use->use, in);
 
             po_wait_on(wait, true_t);
             ret = in->ret;
@@ -103,15 +104,16 @@ static ssize_t
 
             if (!(file->f_flags & O_NONBLOCK)) wait = po_make (po_wait) from (0);
             fs_out *out  = po_make (fs_out) from (
-                3  ,
+                4  ,
                 use,
                 buf,
-                len
+                len,
+                wait
             );
 
             if (po_trait_of(wait) != po_wait_t) goto err;
             if (po_trait_of(out)  != fs_in_t)   goto err;
-            ops->fdo->out (use->use, out, wait);
+            ops->fdo->out (use->use, out);
 
             po_wait_on(wait, true_t);
             ret = out->ret;
@@ -138,15 +140,16 @@ static long
 
                 if (!(file->f_flags & O_NONBLOCK)) wait = po_make (po_wait) from (0);
                 fs_ctl *ctl  = po_make (fs_ctl) from (
-                    3   ,
+                    4   ,
                     use ,
                     code,
-                    arg
+                    arg ,
+                    wait
                 );
 
                 if (po_trait_of(wait) != po_wait_t) goto err;
                 if (po_trait_of(ctl)  != fs_ctl_t)  goto err;
-                ops->fdo->ctl (use->use, ctl, wait);
+                ops->fdo->ctl (use->use, ctl);
 
                 po_wait_on(wait, true_t);
                 ret = ctl->ret;
