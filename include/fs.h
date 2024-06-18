@@ -1,13 +1,13 @@
-#ifndef _PO_LINUX_FS_H__
-#define _PO_LINUX_FS_H__
+#ifndef PO_LINUX_FS_H
+#define PO_LINUX_FS_H
 
-#include "fs/control.h"
+#include "fs/char.h"
+#include "fs/ctl.h"
+#include "fs/dev.h"
 #include "fs/file.h"
-#include "fs/file_type.h"
-#include "fs/read.h"
-#include "fs/write.h"
-
-#include "fs/chr/chr_type.h"
-#include "fs/chr/chr.h"
+#include "fs/fops.h"
+#include "fs/out.h"
+#include "fs/in.h"
+#include "fs/poll.h"
 
 #endif
