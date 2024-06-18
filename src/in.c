@@ -1,6 +1,8 @@
 #include "in.h"
 #include "file.h"
 
+#include <linux/errno.h>
+
 po_obj_trait fs_in_trait = po_make_trait (
     fs_in_new    ,
     fs_in_clone  ,
@@ -15,10 +17,10 @@ po_obj_trait* fs_in_t = &fs_in_trait;
 bool_t
     fs_in_new
         (fs_in* self, u32_t count, va_list arg)                             {
-            po_wait *wait = null_t; if (count > 3) wait = va_arg(arg, any_t);
             fs_file *file = null_t; if (count > 0) file = va_arg(arg, any_t);
             u8_t    *buf  = null_t; if (count > 1) buf  = va_arg(arg, any_t);
             u64_t    len  = 0     ; if (count > 2) len  = va_arg(arg, u64_t);
+            po_wait *wait = null_t; if (count > 3) wait = va_arg(arg, any_t);
 
             if (!po_make_at(&self->buf, po_ua) from (2, buf, len)) return false_t;
             if (po_trait_of(file) != fs_file_t) goto err;
@@ -62,12 +64,14 @@ bool_t
     fs_in_ready
         (fs_in* self, void* buf, i64_t len)                 {
             if (po_trait_of(self) != fs_in_t) return false_t;
-            if (len < 0)                      return false_t;
-            if (!buf)                         return false_t;
+            if (len < 0)                      goto err;
+            if (!buf)                         goto err;
 
             self->ret = (i64_t) po_ua_copy_from (&self->buf,buf,len);
             po_wake (self->wait, true_t);
             return true_t;
+    err:    fs_in_err(self, -EINVAL);
+            return false_t;
 }
 
 u64_t
