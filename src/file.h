@@ -1,51 +1,20 @@
-#ifndef __PO_FS_FILE_TYPE_H__
-#define __PO_FS_FILE_TYPE_H__
+#ifndef PO_LINUX_FS_FILE_H
+#define PO_LINUX_FS_FILE_H
 
 #include <core.h>
 #include <collections.h>
-#include <linux/fs.h>
 
-struct po_control;
-struct po_write  ;
-struct po_read   ;
+#include <core/wait.h>
 
-typedef union po_poll       {
-    struct                  {
-        u64_t read       : 1;
-        u64_t read_norm  : 1;
-        u64_t write      : 1;
-        u64_t write_norm : 1;
-    };  u64_t all;
-}   po_poll;
-
-typedef struct fs_fops                                       {
-    bool_t         (*ioctl)       (po_obj*, struct fs_ioctl*);
-    bool_t         (*write_atomic)(po_obj*, struct fs_write*);
-    bool_t         (*write)       (po_obj*, struct fs_write*);
-    bool_t         (*read_atomic) (po_obj*, struct fs_read *);
-    bool_t         (*read)        (po_obj*, struct fs_read *);
-    struct po_not* (*poll)        (po_obj*, po_poll*)        ;
-    void           (*close)       (po_obj*)                  ;
-    bool_t         (*open)        (po_obj*)                  ;
-}   fs_fops;
-
-#define fs_make_fops(par_open, par_close, par_read, par_read_atomic, par_write, par_write_atomic, par_control, par_poll) { \
-    .read_atomic  = ((bool_t         (*)(po_obj*, struct po_read*))   (par_read_atomic)) ,\
-    .read         = ((bool_t         (*)(po_obj*, struct po_read*))   (par_read))        ,\
-    .write_atomic = ((bool_t         (*)(po_obj*, struct po_write*))  (par_write_atomic)),\
-    .write        = ((bool_t         (*)(po_obj*, struct po_write*))  (par_write))       ,\
-    .open         = ((bool_t         (*)(po_obj*))                    (par_open))        ,\
-    .close        = ((void           (*)(po_obj*))                    (par_close))       ,\
-    .control      = ((bool_t         (*)(po_obj*, struct po_control*))(par_control))     ,\
-    .poll         = ((struct po_not* (*)(po_obj*, po_poll*))          (par_poll))         \
-}
+struct fs_fops;
 
 extern po_obj_trait *fs_file_t;
-typedef struct       fs_file    {
-    po_obj                 head ;
-    po_obj_trait          *trait;
-    struct file_operations type ;
-    fs_fops               *ops  ;
+typedef struct       fs_file  {
+    po_obj          head;
+    struct file    *file;
+    struct fs_fops *ops;
+    u64_t           off;
+    po_obj         *use;
 }   fs_file;
 
 bool_t fs_file_new  (fs_file*, u32_t, va_list);

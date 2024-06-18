@@ -1,11 +1,9 @@
-#ifndef __PO_FS_FILE_H__
-#define __PO_FS_FILE_H__
+#ifndef PO_LINUX_FS_FILE_H
+#define PO_LINUX_FS_FILE_H
 
 #include <core.h>
 
-struct po_file_type;
-
-extern po_obj_trait *po_file_t;
-typedef struct       po_file  { u8_t po_file[64]; } po_file;
+extern po_obj_trait *fs_file_t;
+typedef struct       fs_file { u8_t file[128]; } fs_file;
 
 #endif
