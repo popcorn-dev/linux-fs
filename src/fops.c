@@ -75,6 +75,7 @@ static ssize_t
 
             po_wait_on(wait, true_t);
             ret = in->ret;
+            po_del (wait);
             po_del (in);
 
             return  ret;
