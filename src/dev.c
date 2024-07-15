@@ -3,19 +3,8 @@
 
 #include "fops.h"
 
-po_obj_trait fs_dev_trait = po_make_trait (
-    fs_dev_new    ,
-    fs_dev_clone  ,
-    null_t        ,
-    fs_dev_del    ,
-    sizeof(fs_dev),
-    null_t
-);
-
-po_obj_trait *fs_dev_t = &fs_dev_trait;
-
-bool_t
-    fs_dev_new
+static bool_t
+    do_new
         (fs_dev* self, u32_t count, va_list arg)                               {
             const char *name = null_t; if (count > 0) name = va_arg(arg, any_t);
             any_t       dev  = null_t; if (count > 1) dev  = va_arg(arg, any_t);
@@ -36,18 +25,30 @@ bool_t
             return true_t;
 }
 
-bool_t
-    fs_dev_clone
-        (fs_dev* par, fs_dev* par_clone)  {
+static bool_t
+    do_clone
+        (fs_dev* self, fs_dev* clone)  {
             return false_t;
 }
 
-void
-    fs_dev_del
+static void
+    do_del
         (fs_dev* self)                                                                {
             if (self->dev == fs_char_t) unregister_chrdev_region(self->maj, self->num);
             ida_destroy(&self->ida);
 }
+
+static pp_obj_trait
+    do_obj = pp_make_trait (
+        do_new        ,
+        do_clone      ,
+        null_t        ,
+        do_del        ,
+        sizeof(fs_dev),
+        null_t
+);
+
+pp_obj_trait *fs_dev_t = &do_obj;
 
 MODULE_LICENSE("GPL");
 EXPORT_SYMBOL(fs_dev_t);

@@ -1,18 +1,7 @@
 #include "file.h"
 
-po_obj_trait fs_file_trait = po_make_trait (
-    fs_file_new    ,
-    fs_file_clone  ,
-    null_t        ,
-    fs_file_del    ,
-    sizeof(fs_file),
-    null_t
-);
-
-po_obj_trait *fs_file_t = &fs_file_trait;
-
-bool_t
-    fs_file_new
+static bool_t
+    do_new
         (fs_file* self, u32_t count, va_list arg) {
             self->file = null_t;
             self->ops  = null_t;
@@ -20,18 +9,30 @@ bool_t
             return true_t;
 }
 
-bool_t
-    fs_file_clone
+static bool_t
+    do_clone
         (fs_file* self, fs_file* clone) {
             return false_t;
 }
 
-void
-    fs_file_del
+static void
+    do_del
         (fs_file* self)      {
-            po_del(self->ops);
-            po_del(self->use);
+            pp_del(self->ops);
+            pp_del(self->use);
 }
+
+static pp_obj_trait
+    do_obj = pp_make_trait (
+        do_new         ,
+        do_clone       ,
+        null_t         ,
+        do_del         ,
+        sizeof(fs_file),
+        null_t
+);
+
+pp_obj_trait *fs_file_t = &do_obj;
 
 #include <linux/module.h>
 MODULE_LICENSE("GPL");

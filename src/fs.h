@@ -1,5 +1,5 @@
-#ifndef PO_LINUX_FS_H
-#define PO_LINUX_FS_H
+#ifndef LINUX_FS_H
+#define LINUX_FS_H
 
 #include <core.h>
 #include <core/class.h>
@@ -14,7 +14,7 @@
 #include "poll.h"
 
 struct fs         {
-    po_class class;
+    pp_class class;
     fs_dev   chr;
     fs_dev   blk;
 };

@@ -13,14 +13,14 @@ static int
         (struct inode* inode, struct file* file)                   {
             fs_fops *self = container_of(file->f_op, fs_fops, fops);
 
-            if (po_trait_of(self) != fs_fops_t) return -EINVAL;
+            if (pp_trait_of(self) != fs_fops_t) return -EINVAL;
             if (!self->fdo)                     return -EINVAL;
-            fs_file* ret = po_make(fs_file) from (0);
+            fs_file* ret = pp_make(fs_file) from (0);
 
-            if (po_trait_of(ret) != fs_file_t) return -ENOMEM;
-            ret->ops  = (fs_fops*) po_ref(self);
+            if (pp_trait_of(ret) != fs_file_t) return -ENOMEM;
+            ret->ops  = (fs_fops*) pp_ref(self);
             ret->file = file;
-            ret->use  = po_obj_new (
+            ret->use  = pp_obj_new (
                 null_t   ,
                 self->use,
                 2        ,
@@ -28,11 +28,11 @@ static int
                 ret
             );
 
-            if (po_trait_of(ret->use) != self->use) goto err;
+            if (pp_trait_of(ret->use) != self->use) goto err;
             file->private_data = ret;
             return 0;
-    err:    po_del(ret->use);
-            po_del(ret)     ;
+    err:    pp_del(ret->use);
+            pp_del(ret)     ;
             return -EINVAL;
 }
 
@@ -41,9 +41,9 @@ static int
         (struct inode* inode, struct file* file) {
             fs_file *self = file->private_data;
 
-            if (po_trait_of(self) != fs_fops_t) return -EINVAL;
-            po_del (self->use);
-            po_del (self);
+            if (pp_trait_of(self) != fs_fops_t) return -EINVAL;
+            pp_del (self->use);
+            pp_del (self);
             return 0;
 }
 
@@ -51,17 +51,17 @@ static ssize_t
     do_in
         (struct file* file, __user char* buf, size_t len, loff_t* off) {
             if (file->f_flags & O_WRONLY) return -EACCES;
-            po_wait *wait = null_t;
+            pp_wait *wait = null_t;
             fs_file *use  = null_t;
             fs_fops *ops  = null_t;
             i64_t    ret  = 0;
 
-            use = file->private_data; if (po_trait_of(use) != fs_file_t) return -EINVAL;
-            ops = use->ops;           if (po_trait_of(ops) != fs_fops_t) return -EINVAL;
+            use = file->private_data; if (pp_trait_of(use) != fs_file_t) return -EINVAL;
+            ops = use->ops;           if (pp_trait_of(ops) != fs_fops_t) return -EINVAL;
             if (!ops->fdo->in) return -EACCES;
 
-            if (!(file->f_flags & O_NONBLOCK)) wait = po_make (po_wait) from (0);
-            fs_in *in  = po_make (fs_in) from (
+            if (!(file->f_flags & O_NONBLOCK)) wait = pp_make (pp_wait) from (0);
+            fs_in *in  = pp_make (fs_in) from (
                 4  ,
                 use,
                 buf,
@@ -69,18 +69,18 @@ static ssize_t
                 wait
             );
 
-            if (po_trait_of(wait) != po_wait_t) goto err;
-            if (po_trait_of(in)   != fs_in_t)   goto err;
+            if (pp_trait_of(wait) != pp_wait_t) goto err;
+            if (pp_trait_of(in)   != fs_in_t)   goto err;
             ops->fdo->in (use->use, in);
 
-            po_wait_on(wait, true_t);
+            pp_wait_on(wait, true_t);
             ret = in->ret;
-            po_del (wait);
-            po_del (in);
+            pp_del (wait);
+            pp_del (in);
 
             return  ret;
-    err:    po_del  (wait);
-            po_del  (in)  ;
+    err:    pp_del  (wait);
+            pp_del  (in)  ;
             return -EINVAL;
 }
 
@@ -88,17 +88,17 @@ static ssize_t
     do_out
         (struct file* file, __user const char* buf, size_t len, loff_t* off) {
             if (file->f_flags == O_RDONLY) return -EACCES;
-            po_wait *wait = null_t;
+            pp_wait *wait = null_t;
             fs_file *use  = null_t;
             fs_fops *ops  = null_t;
             i64_t    ret  = 0;
 
-            use = file->private_data; if (po_trait_of(use) != fs_file_t) return -EINVAL;
-            ops = use->ops;           if (po_trait_of(ops) != fs_fops_t) return -EINVAL;
+            use = file->private_data; if (pp_trait_of(use) != fs_file_t) return -EINVAL;
+            ops = use->ops;           if (pp_trait_of(ops) != fs_fops_t) return -EINVAL;
             if (!ops->fdo->out) return -EACCES;
 
-            if (!(file->f_flags & O_NONBLOCK)) wait = po_make (po_wait) from (0);
-            fs_out *out  = po_make (fs_out) from (
+            if (!(file->f_flags & O_NONBLOCK)) wait = pp_make (pp_wait) from (0);
+            fs_out *out  = pp_make (fs_out) from (
                 4  ,
                 use,
                 buf,
@@ -106,35 +106,35 @@ static ssize_t
                 wait
             );
 
-            if (po_trait_of(wait) != po_wait_t) goto err;
-            if (po_trait_of(out)  != fs_out_t)  goto err;
+            if (pp_trait_of(wait) != pp_wait_t) goto err;
+            if (pp_trait_of(out)  != fs_out_t)  goto err;
             ops->fdo->out (use->use, out);
 
-            po_wait_on(wait, true_t);
+            pp_wait_on(wait, true_t);
             ret = out->ret;
-            po_del (wait);
-            po_del (out);
+            pp_del (wait);
+            pp_del (out);
 
             return  ret;
-    err:    po_del  (wait);
-            po_del  (out) ;
+    err:    pp_del  (wait);
+            pp_del  (out) ;
             return -EINVAL;
 }
 
 static long
     do_ctl
         (struct file* file, unsigned int code, unsigned long arg) {
-            po_wait *wait = null_t;
+            pp_wait *wait = null_t;
             fs_file *use  = null_t;
             fs_fops *ops  = null_t;
             i64_t    ret  = 0;
 
-            use = file->private_data; if (po_trait_of(use) != fs_file_t) return -EINVAL;
-            ops = use->ops;           if (po_trait_of(ops) != fs_fops_t) return -EINVAL;
+            use = file->private_data; if (pp_trait_of(use) != fs_file_t) return -EINVAL;
+            ops = use->ops;           if (pp_trait_of(ops) != fs_fops_t) return -EINVAL;
             if (!ops->fdo->ctl) return -EACCES;
 
-            if (!(file->f_flags & O_NONBLOCK)) wait = po_make (po_wait) from (0);
-            fs_ctl *ctl  = po_make (fs_ctl) from (
+            if (!(file->f_flags & O_NONBLOCK)) wait = pp_make (pp_wait) from (0);
+            fs_ctl *ctl  = pp_make (fs_ctl) from (
                 4   ,
                 use ,
                 code,
@@ -142,18 +142,18 @@ static long
                 wait
             );
 
-            if (po_trait_of(wait) != po_wait_t) goto err;
-            if (po_trait_of(ctl)  != fs_ctl_t)  goto err;
+            if (pp_trait_of(wait) != pp_wait_t) goto err;
+            if (pp_trait_of(ctl)  != fs_ctl_t)  goto err;
             ops->fdo->ctl (use->use, ctl);
 
-            po_wait_on(wait, true_t);
+            pp_wait_on(wait, true_t);
             ret = ctl->ret;
-            po_del (wait);
-            po_del (ctl);
+            pp_del (wait);
+            pp_del (ctl);
 
             return  ret;
-    err:    po_del  (wait);
-            po_del  (ctl) ;
+    err:    pp_del  (wait);
+            pp_del  (ctl) ;
             return -EINVAL;
 }
 
@@ -165,23 +165,23 @@ static __poll_t
             fs_file *use  = null_t;
             u64_t    ret;
 
-            use  = file->private_data; if (po_trait_of(use) != fs_file_t) return -EINVAL;
-            ops  = use->ops;           if (po_trait_of(ops) != fs_fops_t) return -EINVAL;
-            poll = po_make (fs_poll) from (1, use);
+            use  = file->private_data; if (pp_trait_of(use) != fs_file_t) return -EINVAL;
+            ops  = use->ops;           if (pp_trait_of(ops) != fs_fops_t) return -EINVAL;
+            poll = pp_make (fs_poll) from (1, use);
 
-            if (po_trait_of(poll) != fs_poll_t) goto err;
+            if (pp_trait_of(poll) != fs_poll_t) goto err;
             if (!ops->fdo->poll)                goto err;
             ops->fdo->poll (use->use, poll);
 
             poll_wait(file, &poll->poll, table);
             ret = poll->ret;
-            po_del (poll);
+            pp_del (poll);
             return ret;
-    err:    po_del  (poll);
+    err:    pp_del  (poll);
             return -EINVAL;
 }
 
-static struct file_operations do_ops   = {
+static struct file_operations do_ops = {
     .open           = do_open ,
     .release        = do_close,
     .read           = do_in   ,
@@ -191,22 +191,11 @@ static struct file_operations do_ops   = {
     .poll           = do_poll
 };
 
-po_obj_trait fs_fops_trait = po_make_trait (
-    fs_fops_new    ,
-    fs_fops_clone  ,
-    null_t              ,
-    fs_fops_del    ,
-    sizeof(fs_fops),
-    null_t
-);
-
-po_obj_trait *fs_fops_t = &fs_fops_trait;
-
-bool_t
-    fs_fops_new
+static bool_t
+    do_new
         (fs_fops* self, u32_t count, va_list arg)                              {
             fs_fdo       *fdo = null_t; if (count > 0) fdo = va_arg(arg, any_t);
-            po_obj_trait *use = null_t; if (count > 1) use = va_arg(arg, any_t);
+            pp_obj_trait *use = null_t; if (count > 1) use = va_arg(arg, any_t);
             if (!fdo) return false_t;
 
             self->fops = do_ops;
@@ -215,8 +204,8 @@ bool_t
             return true_t;
 }
 
-bool_t
-    fs_fops_clone
+static bool_t
+    do_clone
         (fs_fops* self, fs_fops* clone) {
             self->fops = clone->fops;
             self->use  = clone->use;
@@ -224,10 +213,22 @@ bool_t
             return true_t;
 }
 
-void
-    fs_fops_del
+static void
+    do_del
         (fs_fops* par) {
 }
+
+static pp_obj_trait
+    do_obj = pp_make_trait (
+        do_new         ,
+        do_clone       ,
+        null_t         ,
+        do_del         ,
+        sizeof(fs_fops),
+        null_t
+);
+
+pp_obj_trait *fs_fops_t = &do_obj;
 
 #include <linux/module.h>
 
