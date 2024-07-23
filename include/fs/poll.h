@@ -1,9 +1,9 @@
-#ifndef PO_LINUX_FS_POLL_H
-#define PO_LINUX_FS_POLL_H
+#ifndef LINUX_FS_POLL_H
+#define LINUX_FS_POLL_H
 
 #include <core.h>
 
-extern po_obj_trait *fs_poll_t;
+extern pp_obj_trait *fs_poll_t;
 typedef struct       fs_poll { u8_t poll[128]; } fs_poll;
 
 void   fs_mask_out_norm(fs_poll*);

@@ -1,5 +1,5 @@
-#ifndef PO_LINUX_FS_H
-#define PO_LINUX_FS_H
+#ifndef LINUX_FS_H
+#define LINUX_FS_H
 
 #include "fs/char.h"
 #include "fs/ctl.h"
