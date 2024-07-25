@@ -7,4 +7,4 @@ kernel_module_source (popcorn-linux-fs popcorn-linux-fs)
 kernel_module_include(popcorn-linux-fs ${CMAKE_SOURCE_DIR}/lib/linux-core/include)
 kernel_module_include(popcorn-linux-fs ${CMAKE_SOURCE_DIR}/lib/popcorn/include)
 
-kernel_package_module(popcorn popcorn-linux-fs)
+kernel_package_module(module popcorn-linux-fs)
