@@ -8,7 +8,7 @@ static pp_obj*
         (fs_ctl* self, pp_obj_trait* as)                    {
             if (pp_trait_of(self) != fs_ctl_t) return null_t;
             if (as != pp_ua_t)                 return null_t;
-            return pp_make (pp_ua) from (
+            return (pp_obj*) pp_make (pp_ua) from (
                 2        ,
                 self->arg,
                 -1
