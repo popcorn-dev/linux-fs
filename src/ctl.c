@@ -15,6 +15,23 @@ static pp_obj*
             );
 }
 
+static pp_cast
+    do_cast = pp_make_cast (
+        do_as ,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t
+);
+
+static pp_obj_ops
+    do_ops = { .cast = &do_cast };
+
 static bool_t
     do_new
         (fs_ctl* self, u32_t count, va_list par)                            {
@@ -52,7 +69,7 @@ static pp_obj_trait
         null_t        ,
         do_del        ,
         sizeof(fs_ctl),
-        null_t
+        &do_ops
 );
 
 pp_obj_trait* fs_ctl_t = &do_obj;
